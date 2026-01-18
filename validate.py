@@ -1,7 +1,7 @@
+# Sliding Window with 5 Different Inputs
+# Screenshot-friendly output
+
 import math
-import asyncio
-import random
-import time
 
 class SlidingWindow:
     def __init__(self, size):
@@ -32,16 +32,37 @@ class SlidingWindow:
         if self.count == 0:
             return 0.0
         m = self.mean()
-        return (self.sq_sum / self.count) - m * m
+        return (self.sq_sum / self.count) - (m * m)
 
-async def stream():
-    window = SlidingWindow(50)
-    for _ in range(50):
-        x = random.uniform(0, 100)
-        start = time.perf_counter()
+
+# -------------------------------
+# TESTING WITH 5 DIFFERENT INPUTS
+# -------------------------------
+
+WINDOW_SIZE = 5
+
+test_inputs = [
+    ("Increasing",   [1, 2, 3, 4, 5, 6, 7]),
+    ("Decreasing",   [7, 6, 5, 4, 3, 2, 1]),
+    ("Constant",     [3, 3, 3, 3, 3, 3, 3]),
+    ("Random",       [2.5, 7.1, 1.8, 9.0, 4.2, 6.6, 3.3]),
+    ("Alternating",  [1, -1, 1, -1, 1, -1, 1]),
+]
+
+for name, data in test_inputs:
+    print("=" * 45)
+    print(f"Input Type : {name}")
+    print(f"Input Data : {data}")
+    print("-" * 45)
+
+    window = SlidingWindow(WINDOW_SIZE)
+
+    for x in data:
         window.append(x)
-        latency = (time.perf_counter() - start) * 1e6
-        print(f"x={x:.2f}, mean={window.mean():.2f}, latency={latency:.2f} µs")
-        await asyncio.sleep(0.01)
+        print(
+            f"Added: {x:>5} | "
+            f"Mean: {window.mean():>6.2f} | "
+            f"Variance: {window.variance():>6.2f}"
+        )
 
-await stream()
+    print()
