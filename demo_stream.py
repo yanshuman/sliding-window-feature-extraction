@@ -1,46 +1,33 @@
-"""
-demo_stream.py
+%%writefile sliding_window.py
+import math
 
-Simulates a real-time data stream using asyncio and
-computes rolling mean and variance.
-"""
+class SlidingWindow:
+    def __init__(self, size):
+        self.size = size
+        self.buffer = [0.0] * size
+        self.index = 0
+        self.count = 0
+        self.sum = 0.0
+        self.sq_sum = 0.0
 
-import asyncio
-import random
-import time
-from sliding_window import SlidingWindow
+    def append(self, value):
+        if self.count == self.size:
+            old = self.buffer[self.index]
+            self.sum -= old
+            self.sq_sum -= old * old
+        else:
+            self.count += 1
 
-WINDOW_SIZE = 50
-STREAM_DELAY = 0.01  # seconds
+        self.buffer[self.index] = value
+        self.sum += value
+        self.sq_sum += value * value
+        self.index = (self.index + 1) % self.size
 
+    def mean(self):
+        return self.sum / self.count if self.count else 0.0
 
-async def stream():
-    window = SlidingWindow(WINDOW_SIZE)
-    latencies = []
-
-    for _ in range(200):
-        value = random.uniform(0, 100)
-
-        start = time.perf_counter()
-        window.append(value)
-        mean = window.mean()
-        var = window.variance()
-        latency = (time.perf_counter() - start) * 1e6  # microseconds
-
-        latencies.append(latency)
-
-        print(
-            f"value={value:.2f}, mean={mean:.2f}, "
-            f"variance={var:.2f}, latency={latency:.2f} µs"
-        )
-
-        await asyncio.sleep(STREAM_DELAY)
-
-    print("\n--- Latency Summary ---")
-    print(f"Average: {sum(latencies)/len(latencies):.2f} µs")
-    print(f"Max: {max(latencies):.2f} µs")
-    print(f"Min: {min(latencies):.2f} µs")
-
-
-if __name__ == "__main__":
-    asyncio.run(stream())
+    def variance(self):
+        if self.count == 0:
+            return 0.0
+        m = self.mean()
+        return (self.sq_sum / self.count) - m * m
